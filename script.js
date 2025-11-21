@@ -3,6 +3,7 @@ const canvas = document.getElementById('memeCanvas');
 const ctx = canvas.getContext('2d');
 const imageInput = document.getElementById('imageInput');
 const canvasPlaceholder = document.getElementById('canvasPlaceholder');
+const sampleImages = document.querySelectorAll('.sample-image');
 
 // State
 let currentImage = null;
@@ -30,49 +31,68 @@ const textState = {
     }
 };
 
-// Load image
+// Function to load image from source
+function loadImage(src) {
+    const img = new Image();
+    img.onload = () => {
+        currentImage = img;
+        // Scale canvas to fit image while maintaining aspect ratio
+        const maxWidth = 800;
+        const maxHeight = 600;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+        }
+        if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Update text positions to match new canvas size
+        textState.top.x = width / 2;
+        textState.top.y = 50;
+        textState.bottom.x = width / 2;
+        textState.bottom.y = height - 50;
+        
+        // Update range inputs max values
+        updateRangeInputs(width, height);
+        
+        canvasPlaceholder.classList.add('hidden');
+        drawMeme();
+    };
+    img.src = src;
+}
+
+// Load image from file upload
 imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-                currentImage = img;
-                // Scale canvas to fit image while maintaining aspect ratio
-                const maxWidth = 800;
-                const maxHeight = 600;
-                let width = img.width;
-                let height = img.height;
-                
-                if (width > maxWidth) {
-                    height = (height * maxWidth) / width;
-                    width = maxWidth;
-                }
-                if (height > maxHeight) {
-                    width = (width * maxHeight) / height;
-                    height = maxHeight;
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                
-                // Update text positions to match new canvas size
-                textState.top.x = width / 2;
-                textState.top.y = 50;
-                textState.bottom.x = width / 2;
-                textState.bottom.y = height - 50;
-                
-                // Update range inputs max values
-                updateRangeInputs(width, height);
-                
-                canvasPlaceholder.classList.add('hidden');
-                drawMeme();
-            };
-            img.src = event.target.result;
+            loadImage(event.target.result);
+            // Remove active state from sample images
+            sampleImages.forEach(img => img.classList.remove('active'));
         };
         reader.readAsDataURL(file);
     }
+});
+
+// Load sample images
+sampleImages.forEach(sampleImg => {
+    sampleImg.addEventListener('click', () => {
+        const src = sampleImg.getAttribute('data-src');
+        loadImage(src);
+        
+        // Update active state
+        sampleImages.forEach(img => img.classList.remove('active'));
+        sampleImg.classList.add('active');
+    });
 });
 
 // Update range input max values
@@ -175,6 +195,9 @@ function updateDisplayValues() {
 function drawMeme() {
     if (!currentImage) return;
     
+    // Save canvas context state
+    ctx.save();
+    
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
@@ -182,7 +205,7 @@ function drawMeme() {
     ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
     
     // Draw top text
-    if (textState.top.text) {
+    if (textState.top.text && textState.top.text.trim() !== '') {
         drawText(
             textState.top.text, 
             textState.top.x, 
@@ -194,7 +217,7 @@ function drawMeme() {
     }
     
     // Draw bottom text
-    if (textState.bottom.text) {
+    if (textState.bottom.text && textState.bottom.text.trim() !== '') {
         drawText(
             textState.bottom.text, 
             textState.bottom.x, 
@@ -204,10 +227,17 @@ function drawMeme() {
             textState.bottom.borderColor
         );
     }
+    
+    // Restore canvas context state
+    ctx.restore();
 }
 
 // Draw text with customizable fill and stroke colors
 function drawText(text, x, y, fontSize, textColor, borderColor) {
+    // Save context state before modifying
+    ctx.save();
+    
+    // Set text properties
     ctx.font = `bold ${fontSize}px Impact, Arial Black, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -226,6 +256,9 @@ function drawText(text, x, y, fontSize, textColor, borderColor) {
     // Draw fill on top
     ctx.fillStyle = fillColor;
     ctx.fillText(text, x, y);
+    
+    // Restore context state
+    ctx.restore();
 }
 
 // Check if point is near text
