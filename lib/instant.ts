@@ -26,14 +26,50 @@ const schema = i.schema({
 
 // Create a mock db object for fallback when InstantDB can't be initialized
 const createMockDb = (): ReturnType<typeof init> => {
+  const warn = () => {
+    console.warn(
+      "⚠️ InstantDB is not configured. Please set NEXT_PUBLIC_INSTANTDB_APP_ID in your Vercel environment variables."
+    );
+  };
+  
   return {
-    useQuery: () => ({ data: null, isLoading: false }),
-    useAuth: () => ({ user: null }),
+    useQuery: () => {
+      warn();
+      return { data: null, isLoading: false };
+    },
+    useAuth: () => {
+      warn();
+      return { user: null };
+    },
     auth: {
-      signOut: async () => {},
-      sendMagicCode: async () => {},
-      signInWithMagicCode: async () => {},
-      signInWithGoogle: async () => {},
+      signOut: async () => {
+        warn();
+      },
+      sendMagicCode: async () => {
+        warn();
+        throw new Error("InstantDB is not configured. Please set NEXT_PUBLIC_INSTANTDB_APP_ID in Vercel.");
+      },
+      signInWithMagicCode: async () => {
+        warn();
+        throw new Error("InstantDB is not configured. Please set NEXT_PUBLIC_INSTANTDB_APP_ID in Vercel.");
+      },
+      signInWithGoogle: async () => {
+        warn();
+        throw new Error("InstantDB is not configured. Please set NEXT_PUBLIC_INSTANTDB_APP_ID in Vercel.");
+      },
+    },
+    transact: async (tx: any) => {
+      warn();
+      throw new Error("InstantDB is not configured. Please set NEXT_PUBLIC_INSTANTDB_APP_ID in Vercel.");
+    },
+    tx: {
+      memes: new Proxy({}, {
+        get: () => ({
+          update: () => ({
+            // Return a transaction object that will fail when transact is called
+          }),
+        }),
+      }),
     },
   } as unknown as ReturnType<typeof init>;
 };
