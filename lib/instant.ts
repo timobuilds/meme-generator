@@ -3,10 +3,9 @@ import { init, i } from "@instantdb/react";
 const APP_ID = process.env.NEXT_PUBLIC_INSTANTDB_APP_ID;
 
 if (!APP_ID) {
-  console.error(
+  throw new Error(
     "Missing NEXT_PUBLIC_INSTANTDB_APP_ID environment variable. Please check your .env.local file."
   );
-  // Don't throw in production to prevent app crash - will fail gracefully when db is used
 }
 
 const schema = i.schema({
@@ -24,10 +23,8 @@ const schema = i.schema({
   },
 });
 
-export const db = APP_ID
-  ? init({
-      appId: APP_ID,
-      schema,
-    })
-  : ({} as ReturnType<typeof init>); // Fallback to prevent crash
+export const db = init({
+  appId: APP_ID,
+  schema,
+});
 
