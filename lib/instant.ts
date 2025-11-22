@@ -1,12 +1,17 @@
 import { init, i } from "@instantdb/react";
 
-const APP_ID = process.env.NEXT_PUBLIC_INSTANTDB_APP_ID;
+const APP_ID = process.env.NEXT_PUBLIC_INSTANTDB_APP_ID?.trim();
 
-if (!APP_ID) {
-  console.error(
-    "Missing NEXT_PUBLIC_INSTANTDB_APP_ID environment variable. Please check your .env.local file."
-  );
-  // Don't throw in production to prevent app crash - will fail gracefully when db is used
+// Log initialization status (only in browser to avoid server-side noise)
+if (typeof window !== "undefined") {
+  if (!APP_ID) {
+    console.error(
+      "❌ Missing NEXT_PUBLIC_INSTANTDB_APP_ID environment variable."
+    );
+    console.error("Please set it in Vercel Dashboard → Settings → Environment Variables");
+  } else {
+    console.log("✅ InstantDB APP_ID found:", APP_ID.substring(0, 8) + "...");
+  }
 }
 
 const schema = i.schema({
@@ -77,16 +82,28 @@ const createMockDb = (): ReturnType<typeof init> => {
 // Initialize InstantDB with error handling
 let db: ReturnType<typeof init>;
 try {
-  if (!APP_ID) {
-    throw new Error("APP_ID is missing");
+  if (!APP_ID || APP_ID.length === 0) {
+    throw new Error("APP_ID is missing or empty");
   }
+  
+  if (typeof window !== "undefined") {
+    console.log("🔌 Initializing InstantDB...");
+  }
+  
   db = init({
     appId: APP_ID,
     schema,
   });
+  
+  if (typeof window !== "undefined") {
+    console.log("✅ InstantDB initialized successfully");
+  }
 } catch (error) {
-  console.error("Failed to initialize InstantDB:", error);
-  console.warn("Using mock db - database features will be disabled");
+  if (typeof window !== "undefined") {
+    console.error("❌ Failed to initialize InstantDB:", error);
+    console.warn("⚠️ Using mock db - database features will be disabled");
+    console.warn("💡 Check that NEXT_PUBLIC_INSTANTDB_APP_ID is set correctly in Vercel");
+  }
   db = createMockDb();
 }
 
