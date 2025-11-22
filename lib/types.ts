@@ -23,8 +23,24 @@ export interface Meme {
 }
 
 export interface Schema {
-  memes: {
-    id: Meme;
+  entities: {
+    memes: {
+      id: string;
+      userId: string;
+      userName: string;
+      imageData: string;
+      topText: string;
+      bottomText: string;
+      textState: {
+        top: TextState;
+        bottom: TextState;
+      };
+      createdAt: number;
+      upvoteUserIds: string[];
+    };
   };
+  links: {};
+  rooms: {};
+  withRoomSchema: {};
 }
 

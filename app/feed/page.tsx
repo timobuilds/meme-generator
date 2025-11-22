@@ -15,7 +15,11 @@ export default function FeedPage() {
     memes: {},
   });
 
-  const memes: Meme[] = data?.memes || [];
+  const memes: Meme[] = ((data?.memes || []) as any[]).map((meme) => ({
+    ...meme,
+    textState: typeof meme.textState === "string" ? JSON.parse(meme.textState) : meme.textState,
+    upvoteUserIds: typeof meme.upvoteUserIds === "string" ? JSON.parse(meme.upvoteUserIds) : meme.upvoteUserIds,
+  })) as Meme[];
 
   const sortedMemes = [...memes].sort((a, b) => {
     if (sortBy === "popular") {
@@ -25,16 +29,16 @@ export default function FeedPage() {
   });
 
   useEffect(() => {
+    if (!fullscreenMeme) return;
+
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setFullscreenMeme(null);
       }
     };
 
-    if (fullscreenMeme) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
+    document.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
@@ -120,11 +124,14 @@ export default function FeedPage() {
           <div
             className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
             onClick={() => setFullscreenMeme(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Fullscreen meme view"
           >
             <button
               onClick={() => setFullscreenMeme(null)}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors text-2xl font-light"
-              aria-label="Close"
+              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors text-2xl font-light w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label="Close fullscreen view"
             >
               ✕
             </button>
@@ -134,8 +141,9 @@ export default function FeedPage() {
             >
               <img
                 src={fullscreenMeme.imageData}
-                alt="Meme"
+                alt={`Meme by ${fullscreenMeme.userName}`}
                 className="max-w-full max-h-[90vh] object-contain"
+                loading="eager"
               />
             </div>
           </div>

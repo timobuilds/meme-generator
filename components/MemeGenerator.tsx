@@ -402,12 +402,12 @@ export default function MemeGenerator() {
         imageData,
         topText: textState.top.text,
         bottomText: textState.bottom.text,
-        textState: {
+        textState: JSON.stringify({
           top: textState.top,
           bottom: textState.bottom,
-        },
+        }),
         createdAt: Date.now(),
-        upvoteUserIds: [],
+        upvoteUserIds: JSON.stringify([]),
       };
 
       await db.transact(db.tx.memes[id].update(memeData));

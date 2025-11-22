@@ -11,7 +11,11 @@ export default function LandingPage() {
     memes: {},
   });
 
-  const memes: Meme[] = data?.memes || [];
+  const memes: Meme[] = ((data?.memes || []) as any[]).map((meme) => ({
+    ...meme,
+    textState: typeof meme.textState === "string" ? JSON.parse(meme.textState) : meme.textState,
+    upvoteUserIds: typeof meme.upvoteUserIds === "string" ? JSON.parse(meme.upvoteUserIds) : meme.upvoteUserIds,
+  })) as Meme[];
   const topMemes = [...memes]
     .sort((a, b) => b.upvoteUserIds.length - a.upvoteUserIds.length)
     .slice(0, 3);
@@ -57,7 +61,9 @@ export default function LandingPage() {
                     src={src}
                     alt={`Sample meme ${index + 1}`}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
                     className="object-cover"
+                    priority={index === 0}
                   />
                 </div>
               )
@@ -165,7 +171,7 @@ export default function LandingPage() {
               >
                 <div className="text-4xl mb-4">💬</div>
                 <p className="text-[#1d1d1f] mb-6 leading-relaxed italic">
-                  "{testimonial.quote}"
+                  &quot;{testimonial.quote}&quot;
                 </p>
                 <div>
                   <div className="font-semibold text-[#1d1d1f]">{testimonial.author}</div>

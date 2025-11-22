@@ -42,7 +42,7 @@ export default function AuthButton({ onSuccess }: AuthButtonProps) {
 
   const handleGoogleSignIn = async () => {
     try {
-      await db.auth.signInWithGoogle();
+      await (db.auth as any).signInWithGoogle();
     } catch (err: any) {
       setError(err.message || "Failed to sign in with Google");
     }
