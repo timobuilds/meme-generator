@@ -24,10 +24,35 @@ const schema = i.schema({
   },
 });
 
-// Always initialize InstantDB to ensure proper typing
-// If APP_ID is missing, it will fail at runtime but TypeScript types will be correct
-export const db = init({
-  appId: APP_ID || "",
-  schema,
-});
+// Create a mock db object for fallback when InstantDB can't be initialized
+const createMockDb = (): ReturnType<typeof init> => {
+  return {
+    useQuery: () => ({ data: null, isLoading: false }),
+    useAuth: () => ({ user: null }),
+    auth: {
+      signOut: async () => {},
+      sendMagicCode: async () => {},
+      signInWithMagicCode: async () => {},
+      signInWithGoogle: async () => {},
+    },
+  } as unknown as ReturnType<typeof init>;
+};
+
+// Initialize InstantDB with error handling
+let db: ReturnType<typeof init>;
+try {
+  if (!APP_ID) {
+    throw new Error("APP_ID is missing");
+  }
+  db = init({
+    appId: APP_ID,
+    schema,
+  });
+} catch (error) {
+  console.error("Failed to initialize InstantDB:", error);
+  console.warn("Using mock db - database features will be disabled");
+  db = createMockDb();
+}
+
+export { db };
 
