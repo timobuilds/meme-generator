@@ -24,10 +24,10 @@ const schema = i.schema({
   },
 });
 
-export const db = APP_ID
-  ? init({
-      appId: APP_ID,
-      schema,
-    })
-  : ({} as ReturnType<typeof init>); // Fallback to prevent crash
+// Always initialize InstantDB to ensure proper typing
+// If APP_ID is missing, it will fail at runtime but TypeScript types will be correct
+export const db = init({
+  appId: APP_ID || "",
+  schema,
+});
 
